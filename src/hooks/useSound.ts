@@ -8,49 +8,93 @@ export const TRACKS: Record<1 | 2 | 3 | 4, string> = {
 }
 
 /**
- * Plays the selected clock sound in a loop while `active` is true.
- * Switches to the new track immediately when `track` changes.
- * When `active` becomes false the audio is paused and reset.
+ * Plays the selected clock sound in a gapless loop while `active` is true.
+ * Uses the Web Audio API (AudioBufferSourceNode) for sample-accurate looping
+ * with zero gap between repetitions — HTMLAudioElement loop=true and the
+ * 'ended' event approach both introduce a small but audible pause.
  */
 export function useSound(active: boolean, track: 1 | 2 | 3 | 4) {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const ctxRef    = useRef<AudioContext | null>(null)
+  const bufferRef = useRef<AudioBuffer | null>(null)
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null)
+  // Track which url is currently decoded so we re-fetch on track change
+  const loadedUrlRef = useRef<string>('')
 
-  // Swap src whenever the chosen track changes
-  useEffect(() => {
-    if (!audioRef.current) return
-    const wasPlaying = !audioRef.current.paused
-    audioRef.current.pause()
-    audioRef.current.src = TRACKS[track]
-    audioRef.current.currentTime = 0
-    if (wasPlaying) {
-      audioRef.current.play().catch(() => { /* autoplay blocked */ })
+  function getCtx(): AudioContext {
+    if (!ctxRef.current || ctxRef.current.state === 'closed') {
+      ctxRef.current = new AudioContext()
     }
-  }, [track])
+    return ctxRef.current
+  }
 
-  // Start / stop based on `active`
+  async function loadBuffer(url: string): Promise<AudioBuffer> {
+    const ctx = getCtx()
+    const res = await fetch(url)
+    const arrayBuffer = await res.arrayBuffer()
+    return ctx.decodeAudioData(arrayBuffer)
+  }
+
+  function startSource(buffer: AudioBuffer) {
+    const ctx = getCtx()
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.loop = true          // sample-accurate looping inside the API
+    source.connect(ctx.destination)
+    source.start(0)
+    sourceRef.current = source
+  }
+
+  function stopSource() {
+    if (sourceRef.current) {
+      try { sourceRef.current.stop() } catch { /* already stopped */ }
+      sourceRef.current.disconnect()
+      sourceRef.current = null
+    }
+  }
+
+  // React to active / track changes
   useEffect(() => {
-    if (active) {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(TRACKS[track])
-        audioRef.current.loop = true
-      }
-      audioRef.current.play().catch(() => { /* autoplay blocked */ })
+    const url = TRACKS[track]
+
+    if (!active) {
+      stopSource()
+      // Suspend context to release audio hardware while idle
+      ctxRef.current?.suspend()
+      return
+    }
+
+    // Resume a suspended context (required after user gesture on some browsers)
+    ctxRef.current?.resume()
+
+    if (bufferRef.current && loadedUrlRef.current === url) {
+      // Buffer already decoded for this track — start immediately
+      startSource(bufferRef.current)
     } else {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.currentTime = 0
-      }
+      // Fetch & decode, then start
+      stopSource()
+      bufferRef.current = null
+      loadedUrlRef.current = url
+      loadBuffer(url).then(buffer => {
+        // Guard: make sure we're still supposed to be playing this track
+        if (loadedUrlRef.current !== url) return
+        bufferRef.current = buffer
+        if (active) startSource(buffer)
+      }).catch(() => { /* fetch/decode failed */ })
+    }
+
+    return () => {
+      // Cleanup when effect re-runs (track/active changed)
+      stopSource()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active])
+  }, [active, track])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
+      stopSource()
+      ctxRef.current?.close()
+      ctxRef.current = null
     }
   }, [])
 }
