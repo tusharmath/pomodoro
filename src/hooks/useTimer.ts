@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Mode, Settings, Session } from '../types'
-import { useSound } from './useSound'
+import { useSound, useBreakSound } from './useSound'
 
 interface UseTimerReturn {
   mode: Mode
@@ -49,6 +49,13 @@ export function useTimer(): UseTimerReturn {
 
   // Play clock sounds in a loop only during an active pomodoro session
   useSound(isRunning && mode === 'pomodoro', settings.clockSound)
+  // Play break sounds with fade-in/out during active break sessions
+  useBreakSound(
+    isRunning && (mode === 'shortBreak' || mode === 'longBreak'),
+    settings.breakSound,
+    settings.breakFadeIn,
+    settings.breakFadeOut,
+  )
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const settingsRef = useRef(settings)

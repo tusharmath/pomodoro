@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Settings } from '../types'
-import { TRACKS } from '../hooks/useSound'
+import { TRACKS, BREAK_TRACKS } from '../hooks/useSound'
 import styles from './SettingsPanel.module.css'
 
 interface Props {
@@ -66,6 +66,11 @@ const SOUND_LABELS: Record<1 | 2 | 3, string> = {
   3: 'Clock 3',
 }
 
+const BREAK_SOUND_LABELS: Record<1 | 2, string> = {
+  1: 'Break 1',
+  2: 'Break 2',
+}
+
 function SoundPicker({ value, onChange }: { value: 1 | 2 | 3; onChange: (v: 1 | 2 | 3) => void }) {
   const previewRef = useRef<HTMLAudioElement | null>(null)
 
@@ -101,6 +106,47 @@ function SoundPicker({ value, onChange }: { value: 1 | 2 | 3; onChange: (v: 1 | 
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
             </svg>
             {SOUND_LABELS[n]}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function BreakSoundPicker({ value, onChange }: { value: 1 | 2; onChange: (v: 1 | 2) => void }) {
+  const previewRef = useRef<HTMLAudioElement | null>(null)
+
+  function preview(track: 1 | 2) {
+    if (previewRef.current) {
+      previewRef.current.pause()
+      previewRef.current.currentTime = 0
+    }
+    const audio = new Audio(BREAK_TRACKS[track])
+    previewRef.current = audio
+    audio.play().catch(() => {})
+    setTimeout(() => {
+      audio.pause()
+      audio.currentTime = 0
+    }, 3000)
+  }
+
+  return (
+    <div className={styles.field} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
+      <span className={styles.fieldLabel}>Break Sound</span>
+      <div className={styles.soundOptions}>
+        {([1, 2] as const).map(n => (
+          <button
+            key={n}
+            className={`${styles.soundOption} ${value === n ? styles.soundOptionActive : ''}`}
+            onClick={() => { onChange(n); preview(n) }}
+            aria-pressed={value === n}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+            {BREAK_SOUND_LABELS[n]}
           </button>
         ))}
       </div>
@@ -151,6 +197,9 @@ export default function SettingsPanel({ settings, onUpdate, onClose }: Props) {
           <h3 className={styles.sectionTitle}>Sound</h3>
           <Toggle label="Alarm Sound" checked={local.alarmSound} onChange={v => set('alarmSound', v)} />
           <SoundPicker value={local.clockSound} onChange={v => set('clockSound', v)} />
+          <BreakSoundPicker value={local.breakSound} onChange={v => set('breakSound', v)} />
+          <NumberInput label="Break Fade-in (s)" value={local.breakFadeIn} min={0} max={30} onChange={v => set('breakFadeIn', v)} />
+          <NumberInput label="Break Fade-out (s)" value={local.breakFadeOut} min={0} max={30} onChange={v => set('breakFadeOut', v)} />
         </div>
 
         <button className={styles.saveBtn} onClick={handleSave}>

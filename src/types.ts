@@ -9,6 +9,9 @@ export interface Settings {
   autoStartPomodoros: boolean
   alarmSound: boolean
   clockSound: 1 | 2 | 3
+  breakSound: 1 | 2
+  breakFadeIn: number   // seconds
+  breakFadeOut: number  // seconds
 }
 
 export interface Session {
@@ -27,6 +30,9 @@ export const DEFAULT_SETTINGS: Settings = {
   autoStartPomodoros: false,
   alarmSound: true,
   clockSound: 1,
+  breakSound: 1,
+  breakFadeIn: 3,
+  breakFadeOut: 3,
 }
 
 export const MODE_LABELS: Record<Mode, string> = {
