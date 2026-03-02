@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react'
 
+const base = import.meta.env.BASE_URL
+
 export const TRACKS: Record<1 | 2 | 3, string> = {
-  1: '/sounds/clock-1.mp3',
-  2: '/sounds/clock-2.mp3',
-  3: '/sounds/clock-3.mp3',
+  1: `${base}sounds/clock-1.mp3`,
+  2: `${base}sounds/clock-2.mp3`,
+  3: `${base}sounds/clock-3.mp3`,
 }
 
 export const BREAK_TRACKS: Record<1 | 2, string> = {
-  1: '/sounds/break-1.mp3',
-  2: '/sounds/break-2.mp3',
+  1: `${base}sounds/break-1.mp3`,
+  2: `${base}sounds/break-2.mp3`,
 }
 
 // ---------------------------------------------------------------------------
