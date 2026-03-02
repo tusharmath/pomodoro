@@ -8,7 +8,7 @@ export interface Settings {
   autoStartBreaks: boolean
   autoStartPomodoros: boolean
   alarmSound: boolean
-  clockSound: 1 | 2 | 3 | 4
+  clockSound: 1 | 2 | 3
 }
 
 export interface Session {

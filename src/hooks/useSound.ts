@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react'
 
-export const TRACKS: Record<1 | 2 | 3 | 4, string> = {
+export const TRACKS: Record<1 | 2 | 3, string> = {
   1: '/sounds/clock-1.mp3',
   2: '/sounds/clock-2.mp3',
   3: '/sounds/clock-3.mp3',
-  4: '/sounds/clock-4.mp3',
 }
 
 /**
@@ -13,7 +12,7 @@ export const TRACKS: Record<1 | 2 | 3 | 4, string> = {
  * with zero gap between repetitions — HTMLAudioElement loop=true and the
  * 'ended' event approach both introduce a small but audible pause.
  */
-export function useSound(active: boolean, track: 1 | 2 | 3 | 4) {
+export function useSound(active: boolean, track: 1 | 2 | 3) {
   const ctxRef    = useRef<AudioContext | null>(null)
   const bufferRef = useRef<AudioBuffer | null>(null)
   const sourceRef = useRef<AudioBufferSourceNode | null>(null)
