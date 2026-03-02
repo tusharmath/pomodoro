@@ -1,0 +1,40 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svg {
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--ring-color, #e94560) 35%, transparent));
+  transition: filter 0.4s ease;
+}
+
+.running {
+  filter: drop-shadow(0 0 36px color-mix(in srgb, var(--ring-color, #e94560) 55%, transparent));
+}
+
+.display {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.time {
+  font-size: 4rem;
+  font-weight: 700;
+  letter-spacing: -2px;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.9;
+}

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "forge_extension": {
+      "url": "http://localhost:60717/mcp"
+    },
+
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
