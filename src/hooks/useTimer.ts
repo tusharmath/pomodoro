@@ -48,7 +48,7 @@ export function useTimer(): UseTimerReturn {
   const [sessions, setSessions] = useState<Session[]>(() => loadSessions())
 
   // Play clock sounds in a loop only during an active pomodoro session
-  useSound(isRunning && mode === 'pomodoro')
+  useSound(isRunning && mode === 'pomodoro', settings.clockSound)
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const settingsRef = useRef(settings)

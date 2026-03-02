@@ -166,6 +166,47 @@
   transform: translateX(20px);
 }
 
+/* Sound picker */
+.soundOptions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.soundOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.soundOption svg {
+  width: 18px;
+  height: 18px;
+}
+
+.soundOption:hover {
+  background: rgba(255,255,255,0.11);
+  color: var(--color-text);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.soundOptionActive {
+  background: rgba(233,69,96,0.15);
+  border-color: #e94560;
+  color: #e94560;
+}
+
 /* Save button */
 .saveBtn {
   width: 100%;
