@@ -179,27 +179,33 @@ export default function SettingsPanel({ settings, onUpdate, onClose }: Props) {
           </button>
         </div>
 
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Timer (minutes)</h3>
-          <NumberInput label="Pomodoro" value={local.pomodoro} min={1} max={60} onChange={v => set('pomodoro', v)} />
-          <NumberInput label="Short Break" value={local.shortBreak} min={1} max={30} onChange={v => set('shortBreak', v)} />
-          <NumberInput label="Long Break" value={local.longBreak} min={1} max={60} onChange={v => set('longBreak', v)} />
-          <NumberInput label="Long Break Interval" value={local.longBreakInterval} min={2} max={10} onChange={v => set('longBreakInterval', v)} />
-        </div>
+        <div className={styles.body}>
+          <div className={styles.colLeft}>
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>Timer (minutes)</h3>
+              <NumberInput label="Pomodoro" value={local.pomodoro} min={1} max={60} onChange={v => set('pomodoro', v)} />
+              <NumberInput label="Short Break" value={local.shortBreak} min={1} max={30} onChange={v => set('shortBreak', v)} />
+              <NumberInput label="Long Break" value={local.longBreak} min={1} max={60} onChange={v => set('longBreak', v)} />
+              <NumberInput label="Long Break Interval" value={local.longBreakInterval} min={2} max={10} onChange={v => set('longBreakInterval', v)} />
+            </div>
 
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Auto Start</h3>
-          <Toggle label="Auto-start Breaks" checked={local.autoStartBreaks} onChange={v => set('autoStartBreaks', v)} />
-          <Toggle label="Auto-start Pomodoros" checked={local.autoStartPomodoros} onChange={v => set('autoStartPomodoros', v)} />
-        </div>
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>Auto Start</h3>
+              <Toggle label="Auto-start Breaks" checked={local.autoStartBreaks} onChange={v => set('autoStartBreaks', v)} />
+              <Toggle label="Auto-start Pomodoros" checked={local.autoStartPomodoros} onChange={v => set('autoStartPomodoros', v)} />
+            </div>
+          </div>
 
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Sound</h3>
-          <Toggle label="Alarm Sound" checked={local.alarmSound} onChange={v => set('alarmSound', v)} />
-          <SoundPicker value={local.clockSound} onChange={v => set('clockSound', v)} />
-          <BreakSoundPicker value={local.breakSound} onChange={v => set('breakSound', v)} />
-          <NumberInput label="Break Fade-in (s)" value={local.breakFadeIn} min={0} max={30} onChange={v => set('breakFadeIn', v)} />
-          <NumberInput label="Break Fade-out (s)" value={local.breakFadeOut} min={0} max={30} onChange={v => set('breakFadeOut', v)} />
+          <div className={styles.colRight}>
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>Sound</h3>
+              <Toggle label="Alarm Sound" checked={local.alarmSound} onChange={v => set('alarmSound', v)} />
+              <SoundPicker value={local.clockSound} onChange={v => set('clockSound', v)} />
+              <BreakSoundPicker value={local.breakSound} onChange={v => set('breakSound', v)} />
+              <NumberInput label="Break Fade-in (s)" value={local.breakFadeIn} min={0} max={30} onChange={v => set('breakFadeIn', v)} />
+              <NumberInput label="Break Fade-out (s)" value={local.breakFadeOut} min={0} max={30} onChange={v => set('breakFadeOut', v)} />
+            </div>
+          </div>
         </div>
 
         <button className={styles.saveBtn} onClick={handleSave}>
