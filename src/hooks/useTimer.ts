@@ -131,7 +131,7 @@ export function useTimer(): UseTimerReturn {
     if (Notification.permission === 'granted') {
       new Notification('Pomodoro Timer', {
         body: nextMode === 'pomodoro' ? 'Break over! Time to focus.' : 'Pomodoro done! Take a break.',
-        icon: '/tomato.svg',
+        icon: `${import.meta.env.BASE_URL}tomato.svg`,
       })
     }
 

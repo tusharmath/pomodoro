@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import tomatoSvg from '/tomato.svg'
 import { useTimer } from './hooks/useTimer'
 import { MODE_COLORS } from './types'
 import ModeSelector from './components/ModeSelector'
@@ -47,7 +48,7 @@ export default function App() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.brand}>
-            <img src="/tomato.svg" alt="Pomodoro" className={styles.logo} />
+            <img src={tomatoSvg} alt="Pomodoro" className={styles.logo} />
             <span className={styles.brandName}>Pomodoro</span>
           </div>
           <button
