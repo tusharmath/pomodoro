@@ -1,13 +1,10 @@
 import { useEffect, useRef } from 'react'
 
-import clock1 from '../sounds/clock-1.mp3'
-import clock2 from '../sounds/clock-2.mp3'
-import clock3 from '../sounds/clock-3.mp3'
-
-export const TRACKS: Record<1 | 2 | 3, string> = {
-  1: clock1,
-  2: clock2,
-  3: clock3,
+export const TRACKS: Record<1 | 2 | 3 | 4, string> = {
+  1: '/sounds/clock-1.mp3',
+  2: '/sounds/clock-2.mp3',
+  3: '/sounds/clock-3.mp3',
+  4: '/sounds/clock-4.mp3',
 }
 
 /**
@@ -15,7 +12,7 @@ export const TRACKS: Record<1 | 2 | 3, string> = {
  * Switches to the new track immediately when `track` changes.
  * When `active` becomes false the audio is paused and reset.
  */
-export function useSound(active: boolean, track: 1 | 2 | 3) {
+export function useSound(active: boolean, track: 1 | 2 | 3 | 4) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Swap src whenever the chosen track changes

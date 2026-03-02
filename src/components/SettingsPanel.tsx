@@ -60,16 +60,17 @@ function Toggle({ label, checked, onChange }: ToggleProps) {
   )
 }
 
-const SOUND_LABELS: Record<1 | 2 | 3, string> = {
+const SOUND_LABELS: Record<1 | 2 | 3 | 4, string> = {
   1: 'Clock 1',
   2: 'Clock 2',
   3: 'Clock 3',
+  4: 'Clock 4',
 }
 
-function SoundPicker({ value, onChange }: { value: 1 | 2 | 3; onChange: (v: 1 | 2 | 3) => void }) {
+function SoundPicker({ value, onChange }: { value: 1 | 2 | 3 | 4; onChange: (v: 1 | 2 | 3 | 4) => void }) {
   const previewRef = useRef<HTMLAudioElement | null>(null)
 
-  function preview(track: 1 | 2 | 3) {
+  function preview(track: 1 | 2 | 3 | 4) {
     if (previewRef.current) {
       previewRef.current.pause()
       previewRef.current.currentTime = 0
@@ -88,7 +89,7 @@ function SoundPicker({ value, onChange }: { value: 1 | 2 | 3; onChange: (v: 1 | 
     <div className={styles.field} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
       <span className={styles.fieldLabel}>Clock Sound</span>
       <div className={styles.soundOptions}>
-        {([1, 2, 3] as const).map(n => (
+        {([1, 2, 3, 4] as const).map(n => (
           <button
             key={n}
             className={`${styles.soundOption} ${value === n ? styles.soundOptionActive : ''}`}
