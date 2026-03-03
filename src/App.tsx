@@ -101,6 +101,14 @@ export default function App() {
         />
       </div>
 
+      {/* Footer */}
+      <footer className={styles.footer}>
+        Created with ❤️ using{' '}
+        <a href="https://forgecode.dev" target="_blank" rel="noopener noreferrer">forgecode</a>
+        {' · '}
+        <a href="https://github.com/tusharmath/pomodoro" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </footer>
+
       {/* Settings panel */}
       {showSettings && (
         <SettingsPanel

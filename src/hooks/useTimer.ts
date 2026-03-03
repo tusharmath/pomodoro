@@ -42,7 +42,7 @@ import { DEFAULT_SETTINGS } from '../types'
 export function useTimer(): UseTimerReturn {
   const [settings, setSettings] = useState<Settings>(() => loadSettings(DEFAULT_SETTINGS))
   const [mode, setModeState] = useState<Mode>('pomodoro')
-  const [timeLeft, setTimeLeft] = useState<number>(settings.pomodoro * 60)
+  const [timeLeft, setTimeLeft] = useState<number>(settings.pomodoro * 60 + (settings.pomodoroSeconds ?? 0))
   const [isRunning, setIsRunning] = useState(false)
   const [pomodoroCount, setPomodoroCount] = useState(0)
   const [sessions, setSessions] = useState<Session[]>(() => loadSessions())
