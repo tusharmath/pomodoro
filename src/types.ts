@@ -1,9 +1,12 @@
 export type Mode = 'pomodoro' | 'shortBreak' | 'longBreak'
 
 export interface Settings {
-  pomodoro: number      // minutes
-  shortBreak: number
-  longBreak: number
+  pomodoro: number           // minutes
+  pomodoroSeconds: number    // extra seconds (0–59)
+  shortBreak: number         // minutes
+  shortBreakSeconds: number  // extra seconds (0–59)
+  longBreak: number          // minutes
+  longBreakSeconds: number   // extra seconds (0–59)
   longBreakInterval: number  // pomodoros before long break
   autoStartBreaks: boolean
   autoStartPomodoros: boolean
@@ -23,8 +26,11 @@ export interface Session {
 
 export const DEFAULT_SETTINGS: Settings = {
   pomodoro: 25,
+  pomodoroSeconds: 0,
   shortBreak: 5,
+  shortBreakSeconds: 0,
   longBreak: 15,
+  longBreakSeconds: 0,
   longBreakInterval: 4,
   autoStartBreaks: false,
   autoStartPomodoros: false,

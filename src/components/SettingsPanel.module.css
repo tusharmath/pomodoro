@@ -185,6 +185,30 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Timer stepper (MM:SS) */
+.timerStepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.stepperUnit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeSeparator {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  padding: 0 2px;
+  user-select: none;
+}
+
 /* Toggle */
 .toggle {
   width: 44px;

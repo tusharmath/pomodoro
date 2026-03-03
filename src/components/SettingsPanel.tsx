@@ -38,6 +38,52 @@ function NumberInput({ label, value, min, max, onChange }: NumberInputProps) {
   )
 }
 
+interface TimerInputProps {
+  label: string
+  minutes: number
+  seconds: number
+  onMinutesChange: (v: number) => void
+  onSecondsChange: (v: number) => void
+  maxMinutes?: number
+}
+
+function TimerInput({ label, minutes, seconds, onMinutesChange, onSecondsChange, maxMinutes = 99 }: TimerInputProps) {
+  return (
+    <div className={styles.field}>
+      <label className={styles.fieldLabel}>{label}</label>
+      <div className={styles.timerStepper}>
+        <div className={styles.stepperUnit}>
+          <button
+            className={styles.stepBtn}
+            onClick={() => onMinutesChange(Math.max(0, minutes - 1))}
+            aria-label={`Decrease ${label} minutes`}
+          >−</button>
+          <span className={styles.stepValue}>{String(minutes).padStart(2, '0')}</span>
+          <button
+            className={styles.stepBtn}
+            onClick={() => onMinutesChange(Math.min(maxMinutes, minutes + 1))}
+            aria-label={`Increase ${label} minutes`}
+          >+</button>
+        </div>
+        <span className={styles.timeSeparator}>:</span>
+        <div className={styles.stepperUnit}>
+          <button
+            className={styles.stepBtn}
+            onClick={() => onSecondsChange(Math.max(0, seconds - 1))}
+            aria-label={`Decrease ${label} seconds`}
+          >−</button>
+          <span className={styles.stepValue}>{String(seconds).padStart(2, '0')}</span>
+          <button
+            className={styles.stepBtn}
+            onClick={() => onSecondsChange(Math.min(59, seconds + 1))}
+            aria-label={`Increase ${label} seconds`}
+          >+</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface ToggleProps {
   label: string
   checked: boolean
@@ -182,10 +228,31 @@ export default function SettingsPanel({ settings, onUpdate, onClose }: Props) {
         <div className={styles.body}>
           <div className={styles.colLeft}>
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Timer (minutes)</h3>
-              <NumberInput label="Pomodoro" value={local.pomodoro} min={1} max={60} onChange={v => set('pomodoro', v)} />
-              <NumberInput label="Short Break" value={local.shortBreak} min={1} max={30} onChange={v => set('shortBreak', v)} />
-              <NumberInput label="Long Break" value={local.longBreak} min={1} max={60} onChange={v => set('longBreak', v)} />
+              <h3 className={styles.sectionTitle}>Timer</h3>
+              <TimerInput
+                label="Pomodoro"
+                minutes={local.pomodoro}
+                seconds={local.pomodoroSeconds}
+                onMinutesChange={v => set('pomodoro', v)}
+                onSecondsChange={v => set('pomodoroSeconds', v)}
+                maxMinutes={99}
+              />
+              <TimerInput
+                label="Short Break"
+                minutes={local.shortBreak}
+                seconds={local.shortBreakSeconds}
+                onMinutesChange={v => set('shortBreak', v)}
+                onSecondsChange={v => set('shortBreakSeconds', v)}
+                maxMinutes={99}
+              />
+              <TimerInput
+                label="Long Break"
+                minutes={local.longBreak}
+                seconds={local.longBreakSeconds}
+                onMinutesChange={v => set('longBreak', v)}
+                onSecondsChange={v => set('longBreakSeconds', v)}
+                maxMinutes={99}
+              />
               <NumberInput label="Long Break Interval" value={local.longBreakInterval} min={2} max={10} onChange={v => set('longBreakInterval', v)} />
             </div>
 

@@ -77,9 +77,9 @@ export function useTimer(): UseTimerReturn {
   }, [settings])
 
   const getDuration = useCallback((m: Mode, s: Settings) => {
-    if (m === 'pomodoro') return s.pomodoro * 60
-    if (m === 'shortBreak') return s.shortBreak * 60
-    return s.longBreak * 60
+    if (m === 'pomodoro') return s.pomodoro * 60 + (s.pomodoroSeconds ?? 0)
+    if (m === 'shortBreak') return s.shortBreak * 60 + (s.shortBreakSeconds ?? 0)
+    return s.longBreak * 60 + (s.longBreakSeconds ?? 0)
   }, [])
 
   const playAlarm = useCallback(() => {
@@ -143,10 +143,13 @@ export function useTimer(): UseTimerReturn {
       (nextMode === 'pomodoro' && s.autoStartPomodoros) ||
       (nextMode !== 'pomodoro' && s.autoStartBreaks)
 
+    // Always set to false first so the tick effect sees a real state change
+    // and restarts the interval in a fresh render cycle. Without this,
+    // if isRunning was already true (timer expired while running), calling
+    // setIsRunning(true) is a no-op and the interval never restarts.
+    setIsRunning(false)
     if (shouldAutoStart) {
-      setIsRunning(true)
-    } else {
-      setIsRunning(false)
+      setTimeout(() => setIsRunning(true), 0)
     }
   }, [getDuration, playAlarm])
 
