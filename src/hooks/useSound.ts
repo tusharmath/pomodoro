@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type MutableRefObject } from 'react'
 
 const base = import.meta.env.BASE_URL
 
@@ -27,6 +27,91 @@ async function fetchAndDecode(ctx: AudioContext, url: string): Promise<AudioBuff
   return ctx.decodeAudioData(arrayBuffer)
 }
 
+const WATCHDOG_MS = 2000
+// If ctx.currentTime hasn't advanced across this many watchdog ticks while the
+// context claims to be 'running', the audio pipeline is dead (e.g. the output
+// device went away) and the context must be rebuilt.
+const STALL_TICKS = 2
+
+/**
+ * Browsers can kill looping audio in several ways while the page keeps
+ * running: the AudioContext gets suspended/interrupted (tab backgrounded,
+ * screen lock, another app takes the audio session), the source node is
+ * terminated, or the context stays 'running' but its clock stops advancing
+ * (output device changed / Bluetooth headphones slept). While `active` is
+ * true this hook watches for all of these and repairs them:
+ *  - not running  -> ctx.resume()
+ *  - stalled      -> `rebuild()` (caller closes ctx, creates a new one, restarts)
+ *  - no source    -> `restart()` (caller starts a fresh source node)
+ */
+function useKeepAlive(
+  ctxRef: MutableRefObject<AudioContext | null>,
+  sourceRef: MutableRefObject<AudioBufferSourceNode | null>,
+  active: boolean,
+  restart: () => void,
+  rebuild: () => void,
+) {
+  const restartRef = useRef(restart)
+  const rebuildRef = useRef(rebuild)
+  restartRef.current = restart
+  rebuildRef.current = rebuild
+
+  useEffect(() => {
+    if (!active) return
+
+    let lastTime = -1
+    let stalled = 0
+
+    const check = () => {
+      const ctx = ctxRef.current
+      if (!ctx || ctx.state === 'closed') {
+        rebuildRef.current()
+        return
+      }
+      // 'interrupted' is a Safari-only state not in the TS lib typings
+      if ((ctx.state as string) !== 'running') {
+        stalled = 0
+        ctx.resume().catch(() => { /* needs a user gesture; retry later */ })
+        return
+      }
+      // Running but the clock isn't moving -> pipeline is dead
+      if (ctx.currentTime === lastTime) {
+        stalled++
+        if (stalled >= STALL_TICKS) {
+          stalled = 0
+          lastTime = -1
+          rebuildRef.current()
+          return
+        }
+      } else {
+        stalled = 0
+      }
+      lastTime = ctx.currentTime
+      // Running fine but nothing is playing -> start a source
+      if (!sourceRef.current) restartRef.current()
+    }
+
+    const onStateChange = () => check()
+    const ctx = ctxRef.current
+    ctx?.addEventListener('statechange', onStateChange)
+    document.addEventListener('visibilitychange', check)
+    window.addEventListener('focus', check)
+    window.addEventListener('pointerdown', check)
+    navigator.mediaDevices?.addEventListener?.('devicechange', check)
+    const watchdog = setInterval(check, WATCHDOG_MS)
+
+    return () => {
+      ctx?.removeEventListener('statechange', onStateChange)
+      document.removeEventListener('visibilitychange', check)
+      window.removeEventListener('focus', check)
+      window.removeEventListener('pointerdown', check)
+      navigator.mediaDevices?.removeEventListener?.('devicechange', check)
+      clearInterval(watchdog)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active])
+}
+
 // ---------------------------------------------------------------------------
 // useSound — gapless looping clock tick (no fade)
 // ---------------------------------------------------------------------------
@@ -40,6 +125,8 @@ export function useSound(active: boolean, track: 1 | 2 | 3) {
   const bufferRef    = useRef<AudioBuffer | null>(null)
   const sourceRef    = useRef<AudioBufferSourceNode | null>(null)
   const loadedUrlRef = useRef<string>('')
+  const activeRef    = useRef(active)
+  activeRef.current = active
 
   function getCtx(): AudioContext {
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
@@ -56,15 +143,38 @@ export function useSound(active: boolean, track: 1 | 2 | 3) {
     source.connect(ctx.destination)
     source.start(0)
     sourceRef.current = source
+    // A looping source only ends if we stop it or the browser kills it.
+    // If it was the browser, start a fresh one.
+    source.onended = () => {
+      if (sourceRef.current !== source) return // we stopped it on purpose
+      sourceRef.current = null
+      if (activeRef.current && bufferRef.current) startSource(bufferRef.current)
+    }
   }
 
   function stopSource() {
     if (sourceRef.current) {
-      try { sourceRef.current.stop() } catch { /* already stopped */ }
-      sourceRef.current.disconnect()
+      const src = sourceRef.current
       sourceRef.current = null
+      try { src.stop() } catch { /* already stopped */ }
+      src.disconnect()
     }
   }
+
+  function restart() {
+    if (!activeRef.current || !bufferRef.current) return
+    stopSource()
+    startSource(bufferRef.current)
+  }
+
+  function rebuild() {
+    stopSource()
+    try { ctxRef.current?.close() } catch { /* ignore */ }
+    ctxRef.current = null
+    restart()
+  }
+
+  useKeepAlive(ctxRef, sourceRef, active, restart, rebuild)
 
   useEffect(() => {
     const url = TRACKS[track]
@@ -75,7 +185,7 @@ export function useSound(active: boolean, track: 1 | 2 | 3) {
       return
     }
 
-    ctxRef.current?.resume()
+    getCtx().resume()
 
     if (bufferRef.current && loadedUrlRef.current === url) {
       startSource(bufferRef.current)
@@ -124,6 +234,8 @@ export function useBreakSound(
   const bufferRef    = useRef<AudioBuffer | null>(null)
   const sourceRef    = useRef<AudioBufferSourceNode | null>(null)
   const loadedUrlRef = useRef<string>('')
+  const activeRef    = useRef(active)
+  activeRef.current = active
   // Store fade params in refs so the stop path always sees the latest values
   const fadeOutRef   = useRef(fadeOut)
   fadeOutRef.current = fadeOut
@@ -131,6 +243,8 @@ export function useBreakSound(
   function getCtx(): AudioContext {
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
       ctxRef.current = createCtx()
+      // Gain node belongs to the old context; recreate it lazily
+      gainRef.current = null
     }
     return ctxRef.current
   }
@@ -162,6 +276,37 @@ export function useBreakSound(
     source.connect(gain)
     source.start(0)
     sourceRef.current = source
+    // Browser killed the looping source while we still want sound -> restart
+    source.onended = () => {
+      if (sourceRef.current !== source) return // stopped on purpose
+      sourceRef.current = null
+      if (activeRef.current && bufferRef.current) startSource(bufferRef.current, 0.2)
+    }
+  }
+
+  function restart() {
+    if (!activeRef.current || !bufferRef.current) return
+    const src = sourceRef.current
+    sourceRef.current = null
+    if (src) {
+      try { src.stop() } catch { /* ignore */ }
+      try { src.disconnect() } catch { /* ignore */ }
+    }
+    startSource(bufferRef.current, 0.2)
+  }
+
+  function rebuild() {
+    const src = sourceRef.current
+    sourceRef.current = null
+    if (src) {
+      try { src.stop() } catch { /* ignore */ }
+      try { src.disconnect() } catch { /* ignore */ }
+    }
+    try { gainRef.current?.disconnect() } catch { /* ignore */ }
+    gainRef.current = null
+    try { ctxRef.current?.close() } catch { /* ignore */ }
+    ctxRef.current = null
+    restart()
   }
 
   function stopSource(fadeOutSec: number) {
@@ -169,6 +314,9 @@ export function useBreakSound(
     const gain = gainRef.current
     const src  = sourceRef.current
     if (!ctx || !gain || !src) return
+
+    // Clear first so onended treats this as an intentional stop
+    sourceRef.current = null
 
     const now = ctx.currentTime
     const dur = Math.max(0, fadeOutSec)
@@ -188,9 +336,9 @@ export function useBreakSound(
     setTimeout(() => {
       try { src.disconnect() } catch { /* ignore */ }
     }, (dur + 0.1) * 1000)
-
-    sourceRef.current = null
   }
+
+  useKeepAlive(ctxRef, sourceRef, active, restart, rebuild)
 
   useEffect(() => {
     const url = BREAK_TRACKS[track]
@@ -203,7 +351,7 @@ export function useBreakSound(
       return () => clearTimeout(t)
     }
 
-    ctxRef.current?.resume()
+    getCtx().resume()
 
     if (bufferRef.current && loadedUrlRef.current === url) {
       startSource(bufferRef.current, fadeIn)
